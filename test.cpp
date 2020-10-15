@@ -4,54 +4,61 @@
 using namespace std;
 
 struct Room;
-
 struct Door {
-	shared_ptr<Room> a, b;
-	bool locked;
+	Room* const origin;
+	unique_ptr<Room> dest;
+	bool locked = true;
+	Door(Room* origin)
+	: origin(origin)
+	{}
 };
 
 struct Room {
-	static uint32_t freeuid;
-	uint64_t uid;
-	vector<shared_ptr<Door>> doors;
-	shared_ptr<Room> me;
-
+	vector<Door> children;
+	Door* backdoor = nullptr;
+	int id;
 	Room() 
-	: me(this)
 	{
-		uid = freeuid++;
-		int numDoors = rand() % 4 + 1; 
-		for (int i = 0; i < numDoors; i++)
-			this->doors.emplace_back(make_shared<Door>(me, shared_ptr<Room>(), true));
+		static int nextID = 0;
+		id = nextID++;
+
+		int doors = rand() % 4 + 1;
+		for (int i = 0; i < doors; i++)
+			this->children.emplace_back(this);
 	}
 };
-uint32_t Room::freeuid = 0;
 
-shared_ptr<Door> getInput(Room& room)
+Door* getInput(Room& room)
 {
-	cout << room.uid << " Please enter which room you would like to enter. Options are:\n    ";
-	for (uint32_t i = 0; i < room.doors.size(); i++)
-		cout << "\t(" << i << ')';
-	cout << endl;
-	int ans;
-	cin >> ans;
-	return room.doors.at(ans);
+	while (true) {
+		cout << "\n { " << room.id << " } Please enter which room you would like to enter. Options are:\n";
+		cout << "\t[" << 0 << ']';
+		for (uint32_t i = 1; i <= room.children.size(); i++)
+			cout << "\t(" << i << ')';
+		cout << endl;
+		uint32_t ans;
+		cin >> ans;
+		if (ans > room.children.size())
+			continue;
+		return ans == 0 ? 0 : &room.children[ans - 1];
+	}
 }
 
 void run()
 {
-	Room initialRoom;
-	shared_ptr<Room> currentRoom = initialRoom.me;
-	while (true) {
-		shared_ptr<Door> door = getInput(*currentRoom);
-		if (!door->b) {
-			shared_ptr<Room> newRoom = make_shared<Room>();
-			door->b = newRoom;
-			newRoom->doors.insert(newRoom->doors.begin(), door);
-		}
-		currentRoom = currentRoom == door->a ? door->b : door->a;
-	}
-	// MEMORY LEAK, CIRCULAR DEPENDENCIES MEAN STUFF WONT GET RELEASED
+	Room init, *room = &init;
+    while (true) {
+        Door* door = getInput(*room);
+        if (!door) {
+			if (!room->backdoor) return;
+			room = room->backdoor->origin;
+			continue;
+		} else if (!door->dest) {
+            door->dest = make_unique<Room>();
+            door->dest->backdoor = door;
+        }
+		room = door->dest.get();
+    }
 }
 
 int main(void)
