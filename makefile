@@ -1,4 +1,4 @@
-CXXFLAGS = -std=c++20 -g -Wall -Wextra -fsanitize=address
+CXXFLAGS = -std=gnu++20 -g -Wall -Wextra -fsanitize=address -Wfatal-errors
 LDLIBS = -lasan
 
 all: a.out ;
