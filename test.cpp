@@ -1,170 +1,226 @@
 #include <iostream>
 #include <vector>
-#include <numeric>
 #include <memory>
-#include <algorithm>
+#include <array>
+#include <assert.h>
+#include <initializer_list>
+#include <unordered_map>
+#include <tuple>
 using namespace std;
 
-enum Direction
-{
-	NORTH,
-	EAST,
-	SOUTH,
-	WEST,
-	DIRECTIONS,
-};
+using uint = uint32_t;
 
-Direction reverse(Direction d)
-{
-	return (Direction)(d > 1 ? d - 2 : d + 2);
+template <typename T> struct vec2 {
+	T x = {};
+	T y = {};
+
+	friend constexpr bool operator==(const vec2& a, const vec2& b) noexcept = default;
+
+	friend constexpr vec2 operator+(const vec2& a, const vec2& b) { return { a.x + b.x, a.y + b.y }; }
+	friend constexpr vec2 operator-(const vec2& a, const vec2& b) { return { a.x - b.x, a.y - b.y }; }
+	friend constexpr vec2 operator*(const vec2& a, const vec2& b) { return { a.x * b.x, a.y * b.y }; }
+	friend constexpr vec2 operator/(const vec2& a, const vec2& b) { return { a.x / b.x, a.y / b.y }; }
+
+	friend constexpr vec2 operator+(const vec2& a, const T& b) { return a + vec2<T>{ b, b }; }
+	friend constexpr vec2 operator-(const vec2& a, const T& b) { return a - vec2<T>{ b, b }; }
+	friend constexpr vec2 operator*(const vec2& a, const T& b) { return a * vec2<T>{ b, b }; }
+	friend constexpr vec2 operator/(const vec2& a, const T& b) { return a / vec2<T>{ b, b }; }
+
+	constexpr vec2& operator+=(const vec2& b) { return *this = *this + b; }
+	constexpr vec2& operator-=(const vec2& b) { return *this = *this - b; }
+	constexpr vec2& operator*=(const vec2& b) { return *this = *this * b; }
+	constexpr vec2& operator/=(const vec2& b) { return *this = *this / b; }
+
+	constexpr vec2& operator+=(const T& b) { return *this = *this + b; }
+	constexpr vec2& operator-=(const T& b) { return *this = *this - b; }
+	constexpr vec2& operator*=(const T& b) { return *this = *this * b; }
+	constexpr vec2& operator/=(const T& b) { return *this = *this / b; }
+};
+using ivec2 = vec2<int>;
+
+enum Direction { NORTH, WEST, EAST, SOUTH, N_DIR };
+array<ivec2, N_DIR> diroffsets = { { { 0, -1 }, { -1, 0 }, { 1, 0 }, { 0, 1 } } };
+Direction reverse(Direction d) {
+	switch(d) {
+		case NORTH: return SOUTH;
+		case SOUTH: return NORTH;
+		case EAST: return WEST;
+		case WEST: return EAST;
+		default: return N_DIR;
+	}
 }
+
+
+namespace std
+{
+template <> struct hash<ivec2> {
+	size_t operator()(ivec2 v) const
+	{
+		size_t lhs = hash<int>{}(v.x);
+		size_t rhs = hash<int>{}(v.y);
+		lhs ^= rhs + 0x9e3779b9 + (lhs << 6) + (lhs >> 2);
+		return lhs;
+	}
+};
+} // namespace std
 
 struct Door;
-
-struct Room
-{
-	vector<Door> doors;
-	Door *backdoor = nullptr;
-	int id;
-	inline Room(Door *prev);
-	friend bool operator==(const Room &a, const Room &b);
+struct Room {
+	array<Door*, N_DIR> doors{};
 };
-bool operator==(const Room &a, const Room &b)
-{
-	return &a == &b;
-}
 
-struct Door
-{
-	char c = 'X';
-	Room &origin;
-	unique_ptr<Room> dest;
-	bool locked = true;
-	Direction dir;
-	Door(Room &origin, Direction dir)
-		: origin(origin), dir(dir)
+struct Door {
+	ivec2 from, to;
+	char status = 'X';
+	Door(ivec2 from, ivec2 to)
+		: from(from)
+		, to(to)
 	{
-	}
-	Room &through(Room &from)
-	{
-		unlock();
-		if (!dest)
-			dest = make_unique<Room>(this);
-		return from == origin ? *dest.get() : origin;
-	}
-	Direction relaDir(Room &room)
-	{
-		return room == origin ? dir : reverse(dir);
-	}
-	friend bool operator==(const Door &a, const Door &b);
-	void unlock()
-	{
-		locked = false;
-		c = 'O';
 	}
 };
-bool operator==(const Door &a, const Door &b)
-{
-	return &a == &b;
-}
 
-inline Room::Room(Door *prev)
-{
-	static int nextID = 0;
-	id = nextID++;
+struct Level {
+	ivec2 lowest, highest;
+	unordered_map<ivec2, Room> rooms;
+	vector<unique_ptr<Door> > doors;
 
-	vector<int> dirs(DIRECTIONS);
-	iota(dirs.begin(), dirs.end(), 0);
-	if (prev)
-		dirs.erase(dirs.begin() + reverse(prev->dir));
-	random_shuffle(dirs.begin(), dirs.end());
-
-	if (prev)
-		this->backdoor = prev;
-
-	int doors = rand() % (prev ? 3 : 4) + 1;
-	for (int i = 0; i < doors; i++)
+	Room generateRoom(ivec2 pos)
 	{
-		this->doors.emplace_back(*this, (Direction)dirs[i]);
+		Room room;
+		for (uint i = 0; i < N_DIR; i++) {
+			if (rooms.contains(pos + diroffsets[i]))
+				room.doors[i] = rooms.at(pos + diroffsets[i]).doors[reverse((Direction)i)];
+			if (!room.doors[i] && rand() % 2) {
+				doors.push_back(make_unique<Door>(pos, pos + diroffsets[i]));
+				room.doors[i] = doors.back().get();
+			}
+		}
+		return room;
 	}
+
+	Room& through(ivec2 to)
+	{
+		if (rooms.contains(to))
+			return rooms.at(to);
+		unordered_map<ivec2, Room>::iterator room = rooms.insert(make_pair(to, generateRoom(to))).first;
+		lowest.x = min(lowest.x, room->first.x);
+		lowest.y = min(lowest.y, room->first.y);
+		highest.x = max(highest.x, room->first.x);
+		highest.y = max(highest.y, room->first.y);
+		return room->second;
+	}
+};
+
+template <typename T> constexpr T square(T x) { return x * x; }
+template <typename T> constexpr T outersquare(T x) { return square(x) - square(x - 2); }
+
+template <int N> constexpr array<ivec2, outersquare(N * 2 + 1)> hollowSquare()
+{
+	array<ivec2, outersquare(N * 2 + 1)> arr;
+	int i = 0;
+
+	for (int x = -N; x <= N; ++x, ++i) // top
+		arr[i] = { x, -N };
+
+	for (int y = -N + 1; y < N; ++y, ++i) // left
+		arr[i] = { -N, y };
+	for (int y = -N + 1; y < N; ++y, ++i) // right
+		arr[i] = { N, y };
+
+	for (int x = -N; x <= N; ++x, ++i) // bottom
+		arr[i] = { x, N };
+
+	return arr;
 }
 
 Direction wasd(char c)
 {
-	switch (c)
-	{
-	case 'w':
-		return NORTH;
-	case 'a':
-		return WEST;
-	case 's':
-		return SOUTH;
-	case 'd':
-		return EAST;
-	default:
-		return DIRECTIONS;
+	switch (c) {
+	case 'w': return NORTH;
+	case 'a': return WEST;
+	case 's': return SOUTH;
+	case 'd': return EAST;
+	default: return N_DIR;
 	}
 }
 
-Door *askInput(Room &room)
+void draw(const Level& level, ivec2 player)
 {
-	Door *doors[DIRECTIONS]{};
-	if (room.backdoor)
-		doors[room.backdoor->relaDir(room)] = room.backdoor;
-	for (Door &door : room.doors)
-		doors[door.relaDir(room)] = &door;
+	constexpr ivec2 roomsize{ 5, 5 };
+	auto calcScreenPos = [&level, roomsize](ivec2 room){ 
+		ivec2 relPosInRooms = room - level.lowest;
+		ivec2 screenPos = relPosInRooms * roomsize + roomsize / 2;
+		return screenPos;
+	};
 
-	array<array<char, 10>, 5> screen =
-		{
-			"/=======\\",
-			"|       |",
-			"|       |",
-			"|       |",
-			"\\=======/",
-		};
-	screen[2][4] = '0' + room.id % 10;
-	if (doors[NORTH])
-		screen[0][4] = doors[NORTH]->c;
-	if (doors[SOUTH])
-		screen[4][4] = doors[SOUTH]->c;
-	if (doors[WEST])
-		screen[2][0] = doors[WEST]->c;
-	if (doors[EAST])
-		screen[2][8] = doors[EAST]->c;
+	ivec2 areaInRooms = level.highest + 1 - level.lowest;
+	ivec2 screenSize = areaInRooms * roomsize;
 
-	for (array<char, 10> row : screen)
-		cout << "  " << row.data() << '\n';
-	cout << flush;
+	using col = vector<char>;
+	vector<col> screen(screenSize.x + sizeof('\0'));
 
-	char ans;
-	cin >> ans;
-	if (ans == 'q')
-		exit(0);
-	if (wasd(ans) == DIRECTIONS)
-		return nullptr;
-	return doors[wasd(ans)];
+	for (col& col : screen) {
+		col.resize(screenSize.y);
+		fill(col.begin(), col.end(), ' ');
+	}
+
+	for (const pair<ivec2, Room>& room : level.rooms) {
+		ivec2 screenPos = calcScreenPos(room.first);
+		for (ivec2 i : hollowSquare<2>())
+			screen[screenPos.x + i.x][screenPos.y + i.y] = '#';
+
+		const array<Door*, N_DIR>& doors = room.second.doors;
+		for (int i = 0; i < N_DIR; i++) {
+			if (doors[i])
+				screen[screenPos.x + diroffsets[i].x * 2][screenPos.y + diroffsets[i].y * 2] =
+					doors[i]->status;
+		}
+	}
+
+	screen[calcScreenPos(player).x][calcScreenPos(player).y] = '?';
+
+	for (int y = 0; y < screenSize.y; y++) {
+		for (int x = 0; x < screenSize.x; x++)
+			cout << ' ' << screen[x][y];
+		cout << '\n';
+	}
+
+	cout << endl;
 }
 
-Door &getInput(Room &room)
+Door* input(Room& room)
 {
-	Door *door;
-	while (!(door = askInput(room)))
-		;
-	return *door;
+	auto ask = []() -> Direction {
+		char c;
+		cin >> c;
+		return wasd(c);
+	};
+
+	while (true) {
+		Direction d = ask();
+		if (d == N_DIR) {
+			continue;
+		}
+		if (!room.doors[d]) {
+			continue;
+		}
+		return room.doors[d];
+	}
 }
 
 void run()
 {
-	Room lobby(nullptr);
-	Door exit(lobby, NORTH);
-	exit.c = ' ';
-	Room init(&exit), *room = &init;
-	while (true)
-	{
-		Door &door = getInput(*room);
-		if (door == exit)
-			return;
-		room = &door.through(*room);
+	Level level;
+	ivec2 pos = { 0, 0 };
+	Room& initial = level.through(pos);
+	Room* room = &initial;
+	while (true) {
+		draw(level, pos);
+		Door* d = input(*room);
+		d->status = 'O';
+		ivec2 otherside = d->from == pos ? d->to : d->from;
+		pos = otherside;
+		room = &level.through(otherside);
 	}
 }
 
