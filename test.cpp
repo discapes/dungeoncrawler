@@ -1,13 +1,6 @@
 #include <iostream>
-#include <vector>
 #include <memory>
-#include <array>
-#include <assert.h>
-#include <initializer_list>
-#include <unordered_map>
-#include <tuple>
 #include "dir.hpp"
-#include "vec2.hpp"
 #include "math.hpp"
 #include "config.hpp"
 using namespace std;

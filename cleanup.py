@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+
+# $ make avx512popcnt
+# g++ -Wall -Wextra -pedantic -std=c++14 -O3 avx512popcnt.cpp -o lineavx512popcnt
+# $ python cleanup.py g++ -Wall -Wextra -pedantic -std=c++14 -O3 avx512popcnt.cpp -o avx512popcnt
+
 import sys
 import os
 import os.path
