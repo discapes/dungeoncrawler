@@ -12,21 +12,25 @@ template <typename T> struct vec2 {
 	friend constexpr vec2 operator-(const vec2& a, const vec2& b) { return { a.x - b.x, a.y - b.y }; }
 	friend constexpr vec2 operator*(const vec2& a, const vec2& b) { return { a.x * b.x, a.y * b.y }; }
 	friend constexpr vec2 operator/(const vec2& a, const vec2& b) { return { a.x / b.x, a.y / b.y }; }
+	friend constexpr vec2 operator%(const vec2& a, const vec2& b) { return { a.x % b.x, a.y % b.y }; }
 
 	friend constexpr vec2 operator+(const vec2& a, const T& b) { return a + vec2{ b, b }; }
 	friend constexpr vec2 operator-(const vec2& a, const T& b) { return a - vec2{ b, b }; }
 	friend constexpr vec2 operator*(const vec2& a, const T& b) { return a * vec2{ b, b }; }
 	friend constexpr vec2 operator/(const vec2& a, const T& b) { return a / vec2{ b, b }; }
+	friend constexpr vec2 operator%(const vec2& a, const T& b) { return a % vec2{ b, b }; }
 
 	constexpr vec2& operator+=(const vec2& b) { return *this = *this + b; }
 	constexpr vec2& operator-=(const vec2& b) { return *this = *this - b; }
 	constexpr vec2& operator*=(const vec2& b) { return *this = *this * b; }
 	constexpr vec2& operator/=(const vec2& b) { return *this = *this / b; }
+	constexpr vec2& operator%=(const vec2& b) { return *this = *this % b; }
 
 	constexpr vec2& operator+=(const T& b) { return *this = *this + b; }
 	constexpr vec2& operator-=(const T& b) { return *this = *this - b; }
 	constexpr vec2& operator*=(const T& b) { return *this = *this * b; }
 	constexpr vec2& operator/=(const T& b) { return *this = *this / b; }
+	constexpr vec2& operator%=(const T& b) { return *this = *this % b; }
 };
 using cvec2 = vec2<char>;
 using ucvec2 = vec2<unsigned char>;

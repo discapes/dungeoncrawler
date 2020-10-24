@@ -2,9 +2,9 @@
 #include <array>
 #include "vec2.hpp"
 
-enum Direction { NORTH, WEST, EAST, SOUTH, N_DIR };
+enum Direction { NORTH, SOUTH, EAST, WEST, N_DIR };
 
-constexpr std::array<ivec2, N_DIR> diroffsets = { { { 0, -1 }, { -1, 0 }, { 1, 0 }, { 0, 1 } } };
+constexpr std::array<ivec2, N_DIR> diroffsets = { { { 0, -1 }, { 0, 1 }, { 1, 0 }, { -1, 0 } } };
 
 static Direction reverse(Direction d)
 {
