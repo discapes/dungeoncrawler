@@ -41,7 +41,7 @@ BraceWrapping:
   BeforeCatch: false
   BeforeElse: false
   IndentBraces: false
-  SplitEmptyFunction: true # Unknown to clang-format-4.0
+  SplitEmptyFunction: false # Unknown to clang-format-4.0
   SplitEmptyRecord: true # Unknown to clang-format-4.0
   SplitEmptyNamespace: true # Unknown to clang-format-4.0
 BreakBeforeBinaryOperators: None
