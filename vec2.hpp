@@ -1,12 +1,18 @@
 #pragma once
 #include <stdint.h>
+#include <math.h>
 #include <functional>
 
 template <typename T> struct vec2 {
 	T x = {};
 	T y = {};
 
+	template <typename T2> constexpr operator vec2<T2>() const { return { (T2)x, (T2)y }; }
+	friend constexpr vec2 abs(const vec2& a) { return { abs(a.x), abs(a.y) }; }
+	friend constexpr vec2 ceil(const vec2& a) { return { ceil(a.x), ceil(a.y) }; }
+
 	friend constexpr bool operator==(const vec2& a, const vec2& b) noexcept = default;
+	friend constexpr bool operator==(const vec2& a, const T& b) noexcept { return a == vec2{ b, b }; }
 
 	friend constexpr vec2 operator+(const vec2& a, const vec2& b) { return { a.x + b.x, a.y + b.y }; }
 	friend constexpr vec2 operator-(const vec2& a, const vec2& b) { return { a.x - b.x, a.y - b.y }; }
@@ -47,8 +53,8 @@ using ldvec2 = vec2<long double>;
 
 namespace std
 {
-template <> struct hash<ivec2> {
-	size_t operator()(ivec2 v) const
+template <typename T> struct hash<vec2<T> > {
+	size_t operator()(vec2<T> v) const
 	{
 		size_t lhs = std::hash<int>{}(v.x);
 		size_t rhs = std::hash<int>{}(v.y);

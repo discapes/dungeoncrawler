@@ -1,4 +1,4 @@
-CXXFLAGS = -std=gnu++20 -g -Wall -Wextra# -Wfatal-errors
+CXXFLAGS = -std=c++20 -g -Wall -Wextra #-Wfatal-errors
 LDLIBS =
 
 all: a.out ;

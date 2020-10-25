@@ -1,7 +1,10 @@
 #pragma once
-#define small
+//#define tiny
 
-#ifdef small 
+#ifdef tiny
+constexpr int termW = 20;
+constexpr int termH = 10;
+#elif small
 constexpr int termW = 181;
 constexpr int termH = 15;
 #else

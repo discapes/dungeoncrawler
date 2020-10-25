@@ -6,7 +6,7 @@ enum Direction { NORTH, SOUTH, EAST, WEST, N_DIR };
 
 constexpr std::array<ivec2, N_DIR> diroffsets = { { { 0, -1 }, { 0, 1 }, { 1, 0 }, { -1, 0 } } };
 
-static Direction reverse(Direction d)
+/*static Direction reverse(Direction d)
 {
 	switch (d) {
 	case NORTH: return SOUTH;
@@ -15,7 +15,7 @@ static Direction reverse(Direction d)
 	case WEST: return EAST;
 	default: return N_DIR;
 	}
-}
+}*/
 
 static Direction wasd(char c)
 {
