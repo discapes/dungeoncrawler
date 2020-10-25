@@ -16,7 +16,7 @@ using namespace std;
 
 struct Door {
 	ivec2 from, to, pos;
-	char status = 'X';
+	char status = Chars::doorlocked;
 	Door(ivec2 from, ivec2 to)
 		: from(from)
 		, to(to)
@@ -25,7 +25,7 @@ struct Door {
 };
 
 struct Room {
-	static constexpr ivec2 size = { 5, 5 };
+	static constexpr ivec2 size = { roomsize+1, roomsize+1 };
 	static constexpr auto shape = hollowSquare<Room::size.x + 1>();
 };
 
@@ -50,17 +50,13 @@ struct Level {
 	}
 	void draw(ivec2 player, ivec2 rp)
 	{
-		constexpr char wall = '#';
-		constexpr char playericon = '?';
-		constexpr char empty = ' ';
-
 		static vector<vector<char> > screen(termres.x);
 		once({
 			for (vector<char>& col : screen)
 				col.resize(termres.y);
 		});
 		for (vector<char>& col : screen)
-			fill(col.begin(), col.end(), empty);
+			fill(col.begin(), col.end(), Chars::empty);
 
 		const ivec2 topleft = player - termres / 2;
 		const ivec2 bottomright = topleft + termres - 1;
@@ -71,15 +67,16 @@ struct Level {
 			}
 		};
 
+		set(rp, Chars::roomicon);
+
 		for (pair<const ivec2, Room>& item : rooms)
 			for (ivec2 i : Room::shape)
-				set(item.first + i, wall);
+				set(item.first + i, Chars::wall);
 
 		for (pair<const ivec2, Door>& item : doors)
 			set(item.first, item.second.status);
 
-		set(rp, 'h');
-		set(player, playericon);
+		set(player, Chars::playericon);
 
 		cout << string(50, '\n');
 		for (int y = 0; y < termres.y; y++) {
@@ -115,13 +112,13 @@ void run()
 		bool turnedAroundAtDoor = false;
 		if (wasAtDoor) {
 			ivec2 distFromRoom = abs(pos - rp);
-			turnedAroundAtDoor = distFromRoom.x > Room::size.x/2 || distFromRoom.y > Room::size.y/2; 
+			turnedAroundAtDoor = distFromRoom.x > (Room::size.x+1)/2 || distFromRoom.y > (Room::size.y+1)/2; 
 		}
 		if (isOndoor || turnedAroundAtDoor) {
 			Door* door;
 			if (isOndoor) door = &level.doors.at(pos);
 			else door = &level.doors.at(prev);
-			door->status = ' ';
+			door->status = Chars::dooropen;
 			rp = door->from == rp ? door->to : door->from;
 			room = &level.get(rp);
 		} else {
