@@ -4,6 +4,7 @@
 #include "dir.hpp"
 #include "math.hpp"
 #include "config.hpp"
+#include "getch.h"
 using namespace std;
 #define once(x)                           \
 	{                                 \
@@ -93,11 +94,8 @@ struct Level {
 
 Direction input()
 {
-	Direction d;
-	char c;
-	c = cin.get();
-	cin.clear();
-	d = wasd(c);
+	char c = getch();
+	Direction d = wasd(c);
 	return d;
 }
 
@@ -138,7 +136,7 @@ void run()
 int main(void)
 {
 	srand(time(0));
-	ios_base::sync_with_stdio(false);
+	//ios_base::sync_with_stdio(false);
 	cin.tie(nullptr);
 	cout << endl;
 	run();
