@@ -15,17 +15,11 @@ using namespace std;
 	}
 
 struct Door {
-	ivec2 from, to, pos;
 	char status = Chars::doorlocked;
-	Door(ivec2 from, ivec2 to)
-		: from(from)
-		, to(to)
-		, pos(average(from, to))
-	{}
 };
 
 struct Room {
-	static constexpr ivec2 size = { roomsize+1, roomsize+1 };
+	static constexpr ivec2 size = { roomsize + 1, roomsize + 1 };
 	static constexpr auto shape = hollowSquare<Room::size.x + 1>();
 };
 
@@ -44,7 +38,7 @@ struct Level {
 		for (uint i = 0; i < N_DIR; i++) {
 			ivec2 relNextRoom = diroffsets[i] * Room::size;
 			if (!rooms.contains(pos + relNextRoom) && rand() % 2)
-				doors.emplace(pos + (ivec2)ceil((dvec2)relNextRoom / 2. - 0.5), Door{ pos, pos + relNextRoom });
+				doors.emplace(pos + (ivec2)ceil((dvec2)relNextRoom / 2. - 0.5), Door{});
 		}
 		return room;
 	}
@@ -78,7 +72,6 @@ struct Level {
 
 		set(player, Chars::playericon);
 
-		cout << string(50, '\n');
 		for (int y = 0; y < termres.y; y++) {
 			cout << screen[0][y];
 			for (int x = 1; x < termres.x; x++)
@@ -96,44 +89,63 @@ Direction input()
 	return d;
 }
 
+Direction vectodir(ivec2 v)
+{
+	if (abs(v.x) >= abs(v.y))
+		if (v.x >= 0)
+			return EAST;
+		else
+			return WEST;
+	else if (v.y > 0)
+		return SOUTH;
+	else
+		return NORTH;
+}
+
+bool inwall(ivec2 pos, ivec2 rp)
+{
+	for (ivec2 i : Room::shape)
+		if (pos == rp + i)
+			return true;
+	return false;
+}
+
 void run()
 {
 	Level level;
-	ivec2 pos = { 0, 0 }, prev = pos;
+	ivec2 pos = { 0, 0 };
 	Room* room = &level.get(pos);
 	ivec2 rp = pos;
 	while (true) {
 		level.draw(pos, rp);
 		Direction d = input();
-		if (d == N_DIR) continue;
+		if (d == N_DIR)
+			continue;
+		ivec2 prev = pos;
 		pos += diroffsets[d];
-		bool isOndoor = level.doors.contains(pos);
-		bool wasAtDoor = level.doors.contains(prev);
-		bool turnedAroundAtDoor = false;
-		if (wasAtDoor) {
-			ivec2 distFromRoom = abs(pos - rp);
-			turnedAroundAtDoor = distFromRoom.x > (Room::size.x+1)/2 || distFromRoom.y > (Room::size.y+1)/2; 
-		}
-		if (isOndoor || turnedAroundAtDoor) {
-			Door* door;
-			if (isOndoor) door = &level.doors.at(pos);
-			else door = &level.doors.at(prev);
-			door->status = Chars::dooropen;
-			rp = door->from == rp ? door->to : door->from;
+		Direction fromRoom = vectodir(pos - rp);
+		if (level.doors.contains(pos)) {
+			Door& door = level.doors.at(pos);
+			// unlock door
+			door.status = Chars::dooropen;
+			rp += diroffsets[fromRoom] * Room::size;
 			room = &level.get(rp);
-		} else {
-			for (ivec2 i : Room::shape)
-				if (pos == rp + i)
-					pos = prev;
+		} else if (inwall(pos, rp)) {
+			pos -= diroffsets[d];
+		} else if (bool movedAwayFromRoom = abs(rp - prev).x < abs(rp - pos).x ||
+						    abs(rp - prev).y < abs(rp - pos).y;
+			   movedAwayFromRoom && level.doors.contains(prev)) {
+			rp += diroffsets[fromRoom] * Room::size;
+			room = &level.get(rp);
 		}
-		prev = pos;
+		room = &level.get(rp);
 	}
 }
 
 int main(void)
 {
 	srand(time(0));
-	//ios_base::sync_with_stdio(false);
+	ios_base::sync_with_stdio(false);
 	cin.tie(nullptr);
 	cout << endl;
 	run();
