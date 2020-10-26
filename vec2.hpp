@@ -7,9 +7,10 @@ template <typename T> struct vec2 {
 	T x = {};
 	T y = {};
 
-	template <typename T2> constexpr operator vec2<T2>() const { return { (T2)x, (T2)y }; }
+	template <typename T2> constexpr explicit operator vec2<T2>() const { return { (T2)x, (T2)y }; }
 	friend constexpr vec2 abs(const vec2& a) { return { abs(a.x), abs(a.y) }; }
 	friend constexpr vec2 ceil(const vec2& a) { return { ceil(a.x), ceil(a.y) }; }
+	friend constexpr vec2 floor(const vec2& a) { return { floor(a.x), floor(a.y) }; }
 
 	friend constexpr bool operator==(const vec2& a, const vec2& b) noexcept = default;
 	friend constexpr bool operator==(const vec2& a, const T& b) noexcept { return a == vec2{ b, b }; }
