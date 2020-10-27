@@ -1,5 +1,5 @@
 #pragma once
-#define small
+//#define small
 
 #ifdef tiny
 constexpr int termW = 20;
@@ -12,7 +12,7 @@ constexpr int termW = 220;
 constexpr int termH = 48;
 #endif
 constexpr bool followsPlayer = true;
-constexpr int roomsize = 3;
+constexpr int roomsize = 4;
 
 namespace Chars {
     constexpr char wall = '#';

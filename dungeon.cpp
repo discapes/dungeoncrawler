@@ -41,7 +41,7 @@ struct Level {
 				ivec2 wallmod = { abs(diroffsets[i].y), abs(diroffsets[i].x) };
 				int wallLen = Room::size.x - 1;
 				dvec2 walloffset = (dvec2)wallmod * ((rand() % wallLen) - wallLen / 2);
-				dvec2 doorpos = (dvec2)relNextRoom/2.;
+				dvec2 doorpos = (dvec2)relNextRoom / 2.;
 				doors.emplace(pos + (ivec2)floor(doorpos + walloffset), Door{});
 			}
 		}
@@ -128,7 +128,8 @@ void run()
 			continue;
 		ivec2 prev = pos;
 		pos += diroffsets[d];
-		Direction fromRoom = vectodir((dvec2)pos+0.5 - (dvec2)rp); // +0.5 for accuracy (it needs to be in the middle of the mark)
+		dvec2 actualCenterOfRoom = (dvec2)rp - (Room::size.x % 2 == 0 ? 0 : 0.5);
+		Direction fromRoom = vectodir((dvec2)pos - (dvec2)actualCenterOfRoom);
 		if (level.doors.contains(pos)) {
 			Door& door = level.doors.at(pos);
 			// unlock door
