@@ -22,7 +22,7 @@ int getch(void)
 #include <conio.h>
 int getch(void)
 {
-    return _getch()
+    return _getch();
 }
 
 #endif

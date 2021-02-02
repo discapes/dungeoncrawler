@@ -35,7 +35,7 @@ struct Level {
 			return rooms.at(pos);
 
 		Room& room = rooms.emplace(pos, Room{}).first->second;
-		for (uint i = 0; i < N_DIR; i++) {
+		for (int i = 0; i < N_DIR; i++) {
 			ivec2 relNextRoom = diroffsets[i] * Room::size;
 			if (!rooms.contains(pos + relNextRoom) && rand() % 2) {
 				ivec2 wallmod = { abs(diroffsets[i].y), abs(diroffsets[i].x) };
