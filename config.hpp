@@ -1,16 +1,7 @@
 #pragma once
-//#define small
 
-#ifdef tiny
-constexpr int termW = 20;
-constexpr int termH = 10;
-#elif defined(small)
-constexpr int termW = 180;
-constexpr int termH = 16;
-#else
-constexpr int termW = 220;
-constexpr int termH = 48;
-#endif
+constexpr int termW = 150;
+constexpr int termH = 32;
 constexpr bool followsPlayer = true;
 constexpr int roomsize = 4;
 

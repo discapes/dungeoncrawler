@@ -1,6 +1,6 @@
 CXXFLAGS = -std=c++20 -g -Wall -Wextra #-Wfatal-errors
 LDLIBS =
-NAME = Skall.exe
+NAME = dungeoncrawler
 
 cpp_objects = $(patsubst %.cpp, obj/%.o, $(wildcard *.cpp))
 c_objects = $(patsubst %.c, obj/%.o, $(wildcard *.c))
